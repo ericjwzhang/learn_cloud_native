@@ -1,12 +1,16 @@
-FROM ubuntu:20.04
+FROM golang:1.17 AS build
+WORKDIR /httpsvr/
+COPY . .
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+ENV GOPROXY=https://goproxy.cn,direct
+RUN GOOS=linux go build -installsuffix cgo -o httpsvr main.go
 
-ADD httpsvr /data/learn_cloud_native/
-
-WORKDIR /data/learn_cloud_native/
-
+FROM busybox
+COPY --from=build /httpsvr/httpsvr /httpsvr/httpsvr
 EXPOSE 8080
-
-CMD ["./httpsvr"]
-
+ENV ENV local
+WORKDIR /httpsvr/
+ENTRYPOINT ["./httpsvr"]
 
 
