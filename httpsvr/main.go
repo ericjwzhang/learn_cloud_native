@@ -29,9 +29,9 @@ func index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	ip := getCurrentIP(r)
-	log.Printf("Success! Response code: %d", 200)
+	log.Printf("Success! Response code: %d", http.StatusOK)
 	log.Printf("Success! clientip: %s", ip)
-
+	w.WriteHeader(http.StatusOK)
 	_, err = fmt.Fprintf(w, "welcome to my http server index!")
 	if err != nil {
 		return
