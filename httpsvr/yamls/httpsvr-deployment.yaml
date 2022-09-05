@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpsvr
+  labels:
+    app: httpsvr
+spec:
+  progressDeadlineSeconds: 600 # 标示 Deployment 进展停滞之前，需要等待所给的时长
+  replicas: 2 # 创建2个副本
+  revisionHistoryLimit: 10  # 定义保留的升级记录数 最大可回滚到之前的10个版本
+  selector:
+    matchLabels:
+      app: httpsvr
+  strategy:   # 定义更新策略 - 滚动更新
+    rollingUpdate:
+      maxSurge: 25%   # 超过期望副本数最大比例（或最大值） 向上取整 【值越大更新越快】
+      maxUnavailable: 25%   # 最大不可用pod比例为25% 向下取整【值越小越能保证服务稳定】
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: httpsvr
+    spec:
+      containers:
+        - name: httpsvr
+          image: ericjwzhang/httpsvr
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+          - name: HTTP_PORT  # 配置代码分离
+            valueFrom:
+              configMapKeyRef:  # 通过configMap将配置加载至环境变量 实际并没有用到
+                key: httpport
+                name: common-config
+          - name: LOG_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                key: loglevel
+                name: common-config
+          readinessProbe: # 就绪探针
+            failureThreshold: 3   # 保护容器慢启动；应用将会有最多 3 * 10 = 30s 来完成启动
+            periodSeconds: 10
+            httpGet:  # 由http svr服务内部提供
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5  # 告诉 kubelet 在执行第一次探测前应该等待 5 秒
+            successThreshold: 1 # 探针在失败后，被视为成功的最小连续成功数
+            timeoutSeconds: 1 # 探针超时后等待1秒
+          livenessProbe:  # 存活探针 (仅实验练习与readinessProbe配置一致)
+            failureThreshold: 3
+            periodSeconds: 10
+            httpGet:
+              path: /healthz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo Hello from the postStart handler > postStart.log"]
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","echo Hello from the preStop handler > preStop.log"] # 优雅退出
+          resources: # 资源需求 QoS 类为 Burstable
+            limits:
+              memory: 512Mi
+              cpu: 1
+            requests:
+              memory: 256Mi
+              cpu: 100m
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst # "Default" 不是默认的 DNS 策略。如果未明确指定 dnsPolicy，则使用 "ClusterFirst"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60 # 优雅退出的等待时间，超时会被kill
