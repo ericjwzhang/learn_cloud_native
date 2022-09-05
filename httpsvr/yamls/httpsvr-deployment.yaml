@@ -42,7 +42,7 @@ spec:
             failureThreshold: 3   # 保护容器慢启动；应用将会有最多 3 * 10 = 30s 来完成启动
             periodSeconds: 10
             httpGet:  # 由http svr服务内部提供
-              path: /healthz
+              path: /health
               port: 8080
               scheme: HTTP
             initialDelaySeconds: 5  # 告诉 kubelet 在执行第一次探测前应该等待 5 秒
@@ -52,7 +52,7 @@ spec:
             failureThreshold: 3
             periodSeconds: 10
             httpGet:
-              path: /healthz
+              path: /health
               port: 8080
               scheme: HTTP
             initialDelaySeconds: 5
