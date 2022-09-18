@@ -8,7 +8,7 @@ ENV CGO_ENABLED=0 \
 	GOPROXY=https://goproxy.cn,direct
 RUN go build -o httpsvr main.go
 
-FROM scratch
+FROM busybox
 COPY --from=build /httpsvr/httpsvr /
 EXPOSE 8080
 ENTRYPOINT ["/httpsvr"]
