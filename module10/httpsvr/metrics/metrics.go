@@ -14,16 +14,16 @@ func Register() {
 }
 
 const (
-	Namespace = "cloudnative"
+	MetricsNamespace = "cloudnative"
 )
 
-// NewTimer NewExecutionTimer provides a timer for Updater's RunOnce execution
+// NewExecutionTimer provides a timer for Updater's RunOnce execution
 func NewTimer() *ExecutionTimer {
 	return NewExecutionTimer(functionLatency)
 }
 
 var (
-	functionLatency = CreateExecutionTimeMetric(Namespace,
+	functionLatency = CreateExecutionTimeMetric(MetricsNamespace,
 		"Time spent.")
 )
 
