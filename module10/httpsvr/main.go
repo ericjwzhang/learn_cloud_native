@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/ericjwzhang/learn_cloud_native/module10/metrics"
+	"github.com/ericjwzhang/module10/httpsvr/metrics"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"math/rand"
@@ -75,7 +75,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", health)
-	mux.HandleFunc("/image", images)
+	mux.HandleFunc("/images", images)
 	mux.HandleFunc("/", index)
 	mux.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(":8080", mux); err != nil {
