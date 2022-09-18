@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/port: "8080"
+    prometheus.io/scrape: "true"
+  labels:
+    app: httpsvr
+  name: httpsvc
+spec:
+  type: NodePort
+  selector:
+    app: httpsvr
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpsvr
+  labels:
+    app: httpsvr
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: httpsvr
+  template:
+    metadata:
+      labels:
+        app: httpsvr
+    spec:
+      containers:
+        - name: httpsvr
+          image: ericjwzhang/httpsvr:v1.0-metrics
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+      restartPolicy: Always
+---

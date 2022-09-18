@@ -1,15 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/ericjwzhang/learn_cloud_native/module10/metrics"
-	"github.com/golang/glog"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"strings"
 	"time"
@@ -42,23 +39,21 @@ func index(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func healthz(w http.ResponseWriter, r *http.Request) {
+func randInt(min int, max int) int {
+	rand.Seed(time.Now().UTC().UnixNano())
+	return min + rand.Intn(max-min)
+}
+
+func health(w http.ResponseWriter, r *http.Request) {
 	_, err := fmt.Fprintf(w, "it's working!")
 	if err != nil {
 		return
 	}
 }
 
-func printLog(w http.ResponseWriter, r *http.Request) {
-	flag.Set("v", "4")
-	glog.V(2).Info("This is my test log.")
-
-}
-
 func getCurrentIP(r *http.Request) string {
 	// 先尝试从 X-Forwarded-For 请求头的一个值作为用户的IP
 	ip := r.Header.Get("X-Forwarded-For")
-	//log.Printf(r.RemoteAddr)
 	if ip == "" {
 		ip = strings.Split(r.RemoteAddr, ":")[0]
 	}
@@ -68,22 +63,21 @@ func getCurrentIP(r *http.Request) string {
 func images(w http.ResponseWriter, r *http.Request) {
 	timer := metrics.NewTimer()
 	defer timer.ObserveTotal()
-	randInt := rand.Intn(2000)
-	time.Sleep(time.Millisecond * time.Duration(randInt))
-	w.Write([]byte(fmt.Sprintf("<h1>%d<h1>", randInt)))
+	delay := randInt(10, 2000)
+	time.Sleep(time.Millisecond * time.Duration(delay))
+	w.Write([]byte(fmt.Sprintf("<h1>%d<h1>", delay)))
+	log.Printf("Respond in %d ms", delay)
 }
 
 func main() {
+	log.Printf("Starting http server...")
+	metrics.Register()
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("/health", health)
+	mux.HandleFunc("/image", images)
 	mux.HandleFunc("/", index)
-	mux.HandleFunc("/healthz", healthz)
-	mux.HandleFunc("/logs", printLog)
-	mux.HandleFunc("/images", images)
 	mux.Handle("/metrics", promhttp.Handler())
-	mux.HandleFunc("/debug/pprof/", pprof.Index)
-	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
-	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		log.Fatalf("start http server faild, error: %s\n", err.Error())
 	}

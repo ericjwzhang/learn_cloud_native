@@ -14,7 +14,7 @@ func Register() {
 }
 
 const (
-	Namespace = "cloud-native"
+	Namespace = "cloudnative"
 )
 
 // NewTimer NewExecutionTimer provides a timer for Updater's RunOnce execution
