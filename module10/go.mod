@@ -1,4 +1,4 @@
-module github.com/ericjwzhang
+module github.com/ericjwzhang/learn_cloud_native/module10
 
 go 1.18
 
