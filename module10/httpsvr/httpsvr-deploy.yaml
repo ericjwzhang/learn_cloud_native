@@ -8,7 +8,7 @@ metadata:
     app: httpsvr
   name: httpsvc
 spec:
-  type: NodePort
+  type: NodePort  # 自建集群 通过nginx转发端口来实现外部访问（仅实验使用）
   selector:
     app: httpsvr
   ports:

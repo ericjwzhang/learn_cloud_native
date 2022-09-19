@@ -64,7 +64,7 @@ func images(w http.ResponseWriter, r *http.Request) {
 	timer := metrics.NewTimer()
 	defer timer.ObserveTotal()
 	delay := randInt(10, 2000)
-	time.Sleep(time.Millisecond * time.Duration(delay))
+	time.Sleep(time.Millisecond * time.Duration(delay)) //随机延迟
 	w.Write([]byte(fmt.Sprintf("<h1>%d<h1>", delay)))
 	log.Printf("Respond in %d ms", delay)
 }
@@ -75,7 +75,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", health)
-	mux.HandleFunc("/images", images)
+	mux.HandleFunc("/images", images) //模拟接口延迟
 	mux.HandleFunc("/", index)
 	mux.Handle("/metrics", promhttp.Handler())
 	if err := http.ListenAndServe(":8080", mux); err != nil {
